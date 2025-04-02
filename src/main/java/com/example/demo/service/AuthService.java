@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.JwtProperties;
 import com.example.demo.entity.User;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.security.JwtTokenProvider;
@@ -23,6 +24,15 @@ public class AuthService {
     @Autowired
     private PasswordEncoderUtil passwordEncoder;
 
+    // 登录
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+
+
+    @Autowired
+    private JwtProperties jwtProperties;
+
+
     public String register(String username, String password) {
         if (userRepository.existsByUsername(username)) {
             return "Username exists";
@@ -35,22 +45,32 @@ public class AuthService {
         return "Registration success";
     }
 
-    // 登录
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
-
-    public ResponseEntity<?> login(String username, String password) {
-        Optional<User> user = userRepository.findByUsername(username);
-//        // 生成双令牌
-//        String accessToken = jwtTokenProvider.createToken(username);
-//        String refreshToken = jwtTokenProvider.createRefreshToken(username);
-
-
-        if (user.isEmpty() || !passwordEncoder.matches(password, user.get().getPassword())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
-        }
-
-        String token = jwtTokenProvider.createToken(username);
-        return ResponseEntity.ok(new LoginResponse(username, token));
+public ResponseEntity<?> login(String username, String password) {
+    // 1. 验证用户凭证
+    Optional<User> userOpt = userRepository.findByUsername(username);
+    if (userOpt.isEmpty() || !passwordEncoder.matches(password, userOpt.get().getPassword())) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("用户名或密码错误");
     }
+    // 2.生成双令牌
+    User user = userOpt.get();
+    String accessToken = jwtTokenProvider.createToken(username);
+    String refreshToken = jwtTokenProvider.createRefreshToken(username);
+
+    // 存储刷新令牌到数据库
+    user.setRefreshToken(refreshToken);
+    user.setRefreshTokenExpiry(
+            LocalDateTime.now().plusSeconds(jwtProperties.getRefreshTokenExpiration()/1000)
+    );
+    userRepository.save(user);
+
+    // 4. 返回响应
+    return ResponseEntity.ok(
+            new LoginResponse(
+                    accessToken,
+                    refreshToken,
+                    jwtProperties.getAccessTokenExpiration() / 1000 // 前端需要的秒数
+            )
+    );
+}
+
 }
