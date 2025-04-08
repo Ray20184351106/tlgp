@@ -1,6 +1,6 @@
 import request from './request'
 
-// 获取所有公司列表
+// 获取公司列表
 export const getFirmList = () => {
   return request({
     url: '/api/firms/list',
@@ -13,32 +13,41 @@ export const addFirm = (data) => {
   return request({
     url: '/api/firms/create',
     method: 'post',
+    headers: {
+      'Content-Type': 'application/json'
+    },
     data
   })
 }
 
 // 更新公司信息
-export const updateFirm = (data) => {
+export const updateFirm = (id, data) => {
   return request({
-    url: `/api/firms/update/${data.firmid}`,
+    url: `/api/firms/update/${id}`,
     method: 'put',
-    data
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    data: {
+      firmname: data.firmname
+    }
   })
 }
 
 // 删除公司
-export const deleteFirm = (id) => {
+export const deleteFirm = (firmid) => {
   return request({
-    url: `/api/firms/delete/${id}`,
-    method: 'delete'
+    url: `/api/firms/delete/${firmid}`,
+    method: 'delete',
+    data: { firmid }
   })
 }
 
 // 搜索公司
-export const searchFirm = (query) => {
-  return request({
-    url: '/api/firms/search',
-    method: 'get',
-    params: { query }
-  })
-} 
+// export const searchFirm = (keyword) => {
+//   return request({
+//     url: '/api/firms/search',
+//     method: 'get',
+//     params: { keyword }
+//   })
+// } 

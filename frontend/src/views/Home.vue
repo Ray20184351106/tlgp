@@ -71,45 +71,21 @@
           </el-col>
         </el-row>
 
-        <!-- 自选股票列表 -->
+        <!-- 公司列表 -->
         <el-card class="stock-list-card">
           <template #header>
             <div class="card-header">
-              <span>自选股票</span>
-              <el-button type="primary" @click="handleAddStock">添加自选</el-button>
+              <span>公司列表</span>
+              <el-button type="primary" @click="handleAddFirm">添加公司</el-button>
             </div>
           </template>
-          <el-table :data="watchlist" style="width: 100%">
-            <el-table-column prop="code" label="股票代码" width="120" />
-            <el-table-column prop="name" label="股票名称" width="120" />
-            <el-table-column prop="price" label="最新价" width="100">
-              <template #default="{ row }">
-                <span :class="{ 'up': row.change > 0, 'down': row.change < 0 }">
-                  {{ row.price }}
-                </span>
-              </template>
-            </el-table-column>
-            <el-table-column prop="change" label="涨跌额" width="100">
-              <template #default="{ row }">
-                <span :class="{ 'up': row.change > 0, 'down': row.change < 0 }">
-                  {{ row.change }}
-                </span>
-              </template>
-            </el-table-column>
-            <el-table-column prop="changePercent" label="涨跌幅" width="100">
-              <template #default="{ row }">
-                <span :class="{ 'up': row.change > 0, 'down': row.change < 0 }">
-                  {{ row.changePercent }}%
-                </span>
-              </template>
-            </el-table-column>
-            <el-table-column prop="volume" label="成交量" />
-            <el-table-column prop="amount" label="成交额" />
-            <el-table-column label="操作" width="100">
-              <template #default="{ row }">
-                <el-button type="danger" size="small" @click="handleRemoveStock(row)">
-                  删除
-                </el-button>
+          <el-table :data="firmList" style="width: 100%" v-loading="loading">
+            <el-table-column prop="firmid" label="公司ID" width="120" />
+            <el-table-column prop="firmname" label="公司名称" />
+            <el-table-column label="操作" width="200">
+              <template #default="scope">
+                <el-button size="small" @click="handleEditFirm(scope.row)">编辑</el-button>
+                <el-button size="small" type="danger" @click="handleDeleteFirm(scope.row)">删除</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -149,6 +125,21 @@
         </el-card>
       </el-main>
 
+      <!-- 添加/编辑对话框 -->
+      <el-dialog v-model="dialogVisible" :title="dialogTitle" width="30%">
+        <el-form :model="firmForm" ref="firmFormRef" label-width="80px">
+          <el-form-item label="公司名称" prop="firmname">
+            <el-input v-model="firmForm.firmname"></el-input>
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <span class="dialog-footer">
+            <el-button @click="dialogVisible = false">取 消</el-button>
+            <el-button type="primary" @click="submitForm">确 定</el-button>
+          </span>
+        </template>
+      </el-dialog>
+
       <el-footer height="auto" class="footer">
         <div class="disclaimer">
           📜 免责声明：本网站数据仅供参考，不构成投资建议。股市有风险，入市需谨慎。
@@ -163,11 +154,12 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
+import { getFirmList, addFirm, updateFirm, deleteFirm } from '@/api/firm'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -180,32 +172,103 @@ const handleSearch = () => {
     ElMessage.warning('请输入搜索内容')
     return
   }
-  // TODO: 实现搜索功能
-  console.log('搜索:', searchQuery.value)
+  // 暂时只显示提示信息
+  ElMessage.info('搜索功能开发中')
 }
 
-// 自选股票相关
-const watchlist = ref([
-  {
-    code: '600000',
-    name: '浦发银行',
-    price: '8.23',
-    change: '0.13',
-    changePercent: '1.61',
-    volume: '2345.67万',
-    amount: '1.93亿'
-  },
-  // 添加更多示例数据
-])
+// firm表格相关
+const firmList = ref([])
+const loading = ref(false)
+const dialogVisible = ref(false)
+const dialogTitle = ref('添加公司')
+const firmForm = ref({
+  firmid: null,
+  firmname: ''
+})
 
-const handleAddStock = () => {
-  // TODO: 实现添加自选股票功能
-  ElMessage.info('添加自选股票功能开发中')
+const fetchFirmList = async () => {
+  loading.value = true
+  try {
+    const response = await getFirmList()
+    console.log('API响应数据:', response)
+    if (response.length > 0) {
+      firmList.value = response
+    } else {
+      ElMessage.error(response.message || '获取数据失败')
+    }
+  } catch (error) {
+    console.error('获取公司列表错误:', error)
+    ElMessage.error('获取公司列表失败: ' + (error.message || '未知错误'))
+  } finally {
+    loading.value = false
+  }
 }
 
-const handleRemoveStock = (stock) => {
-  // TODO: 实现删除自选股票功能
-  ElMessage.success(`已删除 ${stock.name}`)
+const handleAddFirm = () => {
+  dialogTitle.value = '添加公司'
+  firmForm.value = {
+    firmid: null,
+    firmname: ''
+  }
+  dialogVisible.value = true
+}
+
+const handleEditFirm = (row) => {
+  dialogTitle.value = '编辑公司'
+  firmForm.value = {
+    firmid: row.firmid,
+    firmname: row.firmname
+  }
+  dialogVisible.value = true
+}
+
+const handleDeleteFirm = (row) => {
+  ElMessageBox.confirm(
+    '确认删除该公司吗？',
+    '提示',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }
+  ).then(() => {
+    deleteFirm(row.firmid)
+      .then(response => {
+        ElMessage.success('删除成功')
+        fetchFirmList()
+      })
+      .catch(error => {
+        ElMessage.error('删除失败')
+      })
+  }).catch(() => {})
+}
+
+const submitForm = () => {
+  if (firmForm.value.firmid) {
+    // 更新
+    updateFirm(firmForm.value.firmid, {
+      firmname: firmForm.value.firmname
+    })
+      .then(response => {
+        ElMessage.success('更新成功')
+        dialogVisible.value = false
+        fetchFirmList()
+      })
+      .catch(error => {
+        ElMessage.error('更新失败：' + (error.message || '未知错误'))
+      })
+  } else {
+    // 添加
+    addFirm(firmForm.value)
+      .then(response => {
+        ElMessage.success('添加成功')
+        dialogVisible.value = false
+        fetchFirmList()
+      })
+      .catch(error => {
+        ElMessage.error('添加失败：' + (error.message || '未知错误'))
+      })
+  }
 }
 
 // 热门股票相关
@@ -251,6 +314,11 @@ const showUserAgreement = () => {
     }
   )
 }
+
+// 在组件挂载时获取公司列表
+onMounted(() => {
+  fetchFirmList()
+})
 </script>
 
 <style scoped>
