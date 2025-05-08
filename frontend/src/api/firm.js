@@ -3,7 +3,7 @@ import request from './request'
 // 获取公司列表
 export const getFirmList = () => {
   return request({
-    url: '/api/firms/list',
+    url: '/api/firms/listInfo',
     method: 'get'
   })
 }

@@ -20,5 +20,14 @@ public class Firm {
     @Column(name = "firmname",nullable = false)
     private String firmname;
 
+    @Column(name = "marketvalue")
+    private String marketvalue;
+
+    @Column(name = "markettime")
+    private String markettime;
+
+    @Column(name = "firmintro")
+    private String firmintro;
+
 
 }

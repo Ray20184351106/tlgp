@@ -18,6 +18,11 @@ public class FirmService {
         return firmRepository.findAll();
     }
 
+    //获取企业详细信息
+    public List<Firm> findFirmWithInfo() {
+        return firmRepository.findFirmWithInfo();
+    }
+
     // 创建企业
     public Firm createFirm(Firm firm) {
         return firmRepository.save(firm);

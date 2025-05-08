@@ -20,9 +20,10 @@ public class LoginResponse {
     private String refreshToken;
     private long expiresIn; // 令牌有效期（秒）
     private  String tokenType = "Bearer";
+    private String code;
 
-    public LoginResponse(String accessToken, String refreshToken, long expiresIn) {
-        this(accessToken, refreshToken, expiresIn, "Bearer");
+    public LoginResponse(String accessToken, String refreshToken, long expiresIn, String code) {
+        this(accessToken, refreshToken, expiresIn, "Bearer",code);
     }
 
 

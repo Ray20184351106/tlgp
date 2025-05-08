@@ -28,6 +28,13 @@ public class FirmController {
         return ResponseEntity.ok(firmService.getAllFirms());
     }
 
+    // 获取所有企业详细信息
+    @GetMapping("listInfo")
+    public ResponseEntity<List<Firm>> getAllFirmsInfo() {
+        return ResponseEntity.ok(firmService.findFirmWithInfo());
+    }
+
+
     // 创建企业
     @PostMapping("create")
     public ResponseEntity<Firm> createFirm(@RequestBody Firm firm) {

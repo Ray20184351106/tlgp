@@ -68,7 +68,8 @@ public ResponseEntity<?> login(String username, String password) {
             new LoginResponse(
                     accessToken,
                     refreshToken,
-                    jwtProperties.getAccessTokenExpiration() / 1000 // 前端需要的秒数
+                    jwtProperties.getAccessTokenExpiration() / 1000,
+                    "200"// 前端需要的秒数
             )
     );
 }

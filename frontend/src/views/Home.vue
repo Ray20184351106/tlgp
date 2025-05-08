@@ -82,6 +82,28 @@
           <el-table :data="firmList" style="width: 100%" v-loading="loading">
             <el-table-column prop="firmid" label="公司ID" width="120" />
             <el-table-column prop="firmname" label="公司名称" />
+            <el-table-column prop="marketvalue" label="市值" width="120">
+          <template #default="scope">
+            {{ scope.row.marketvalue || '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="markettime" label="上市时间" width="120">
+          <template #default="scope">
+            {{ scope.row.markettime || '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="firmintro" label="企业介绍">
+          <template #default="scope">
+            <el-tooltip
+              effect="dark"
+              :content="scope.row.firmintro || '暂无介绍'"
+              placement="top"
+              :show-after="500"
+            >
+              <span class="intro-text">{{ scope.row.firmintro || '暂无介绍' }}</span>
+            </el-tooltip>
+          </template>
+        </el-table-column>
             <el-table-column label="操作" width="200">
               <template #default="scope">
                 <el-button size="small" @click="handleEditFirm(scope.row)">编辑</el-button>

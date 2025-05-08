@@ -78,7 +78,7 @@ public class AuthController {
             );
             userRepository.save(user);
 
-            return ResponseEntity.ok(new LoginResponse(newAccessToken, newRefreshToken,expiration));
+            return ResponseEntity.ok(new LoginResponse(newAccessToken, newRefreshToken,expiration,"200"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("服务器错误");
         }
